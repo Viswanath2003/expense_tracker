@@ -1,7 +1,7 @@
-
+CREATE DATABASE IF NOT EXISTS expense_tracker;
 USE expense_tracker;
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100),
     salary DECIMAL(10,2),
@@ -9,7 +9,7 @@ CREATE TABLE users (
     password VARCHAR(255)
 );
 
-CREATE TABLE expenses (
+CREATE TABLE IF NOT EXISTS expenses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     name VARCHAR(255),
