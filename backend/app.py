@@ -1,9 +1,9 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_mysqldb import MySQL
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
+import MySQLdb.cursors
 import config
-from flask import redirect
 import os
 
 app = Flask(__name__, static_folder='.', static_url_path='')
@@ -11,6 +11,50 @@ app.config.from_object(config.Config)
 CORS(app)
 mysql = MySQL(app)
 
+
+# ---------------------------
+# Database initialization
+# ---------------------------
+def initialize_database():
+    try:
+        conn = mysql.connection
+        cursor = conn.cursor()
+        cursor.execute("SHOW TABLES;")
+        tables = cursor.fetchall()
+
+        if not tables:
+            print("⚙️ Initializing database schema from db.sql...")
+            db_sql_path = os.path.join(os.path.dirname(__file__), 'db.sql')
+
+            if os.path.exists(db_sql_path):
+                with open(db_sql_path, 'r') as f:
+                    sql_commands = f.read()
+
+                # Split and execute each SQL statement
+                for statement in sql_commands.split(';'):
+                    stmt = statement.strip()
+                    if stmt:
+                        cursor.execute(stmt)
+                conn.commit()
+                print("✅ Database schema initialized successfully!")
+            else:
+                print(f"❌ db.sql not found at {db_sql_path}")
+        else:
+            print("✅ Database already initialized. Skipping schema setup.")
+
+        cursor.close()
+    except Exception as e:
+        print("❌ Error initializing database:", e)
+
+
+# Initialize schema when app starts
+with app.app_context():
+    initialize_database()
+
+
+# ---------------------------
+# Flask Routes
+# ---------------------------
 
 @app.route('/')
 def home():
@@ -23,12 +67,13 @@ def register():
     name = data.get('name')
     salary = data.get('salary')
     username = data.get('username')
-    # CRITICAL: Hash the password before insertion
     password = generate_password_hash(data.get('password'))
 
-    cursor = mysql.connection.cursor()
-    cursor.execute("INSERT INTO users (name, salary, username, password) VALUES (%s, %s, %s, %s)",
-                   (name, salary, username, password))
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute(
+        "INSERT INTO users (name, salary, username, password) VALUES (%s, %s, %s, %s)",
+        (name, salary, username, password)
+    )
     mysql.connection.commit()
     cursor.close()
     return jsonify({'message': 'User registered successfully!'}), 201
@@ -40,23 +85,18 @@ def login():
     username = data.get('username')
     password = data.get('password')
 
-    cursor = mysql.connection.cursor()
-    # Fetch all user columns
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT id, name, salary, username, password FROM users WHERE username=%s", (username,))
     user = cursor.fetchone()
-    cursor.close() # Close the cursor immediately after fetching
+    cursor.close()
 
-    # Check if user exists and verify password hash
     if user and check_password_hash(user['password'], password):
-        
-        # CRITICAL FIX: Construct a new dictionary excluding the password hash
         user_data = {
             'id': user['id'],
             'name': user['name'],
             'salary': float(user['salary']),
             'username': user['username']
         }
-        
         return jsonify({'message': 'Login successful', 'user': user_data}), 200
     else:
         return jsonify({'message': 'Invalid credentials'}), 401
@@ -64,7 +104,7 @@ def login():
 
 @app.route('/api/expenses/<int:user_id>', methods=['GET'])
 def get_expenses(user_id):
-    cursor = mysql.connection.cursor()
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT * FROM expenses WHERE user_id=%s", (user_id,))
     expenses = cursor.fetchall()
     cursor.close()
@@ -84,12 +124,11 @@ def add_expense():
     cursor.close()
     return jsonify({'message': 'Expense added successfully!'}), 201
 
+
 @app.route("/api/health")
 def health():
     return jsonify({"status": "ok"}), 200
 
 
-
 if __name__ == '__main__':
-    # Flask is running on 0.0.0.0:5000 inside the container
     app.run(host='0.0.0.0', port=5000)
