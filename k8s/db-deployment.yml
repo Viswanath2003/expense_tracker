@@ -17,21 +17,23 @@ spec:
       containers:
         - name: mysql
           image: mysql:8.0
-          env:
-            - name: MYSQL_ROOT_PASSWORD
-              value: root
-            - name: MYSQL_DATABASE
-              value: expense_tracker
           ports:
             - containerPort: 3306
-          args:
-            - "--default-authentication-plugin=mysql_native_password"
-            - "--skip-ssl"
-            - "--require_secure_transport=OFF"
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "root"
+            - name: MYSQL_DATABASE
+              value: "expense_tracker"
           volumeMounts:
             - name: mysql-data
               mountPath: /var/lib/mysql
+            - name: mysql-config
+              mountPath: /etc/mysql/conf.d/my.cnf
+              subPath: my.cnf
       volumes:
         - name: mysql-data
           persistentVolumeClaim:
             claimName: mysql-pvc
+        - name: mysql-config
+          configMap:
+            name: mysql-config

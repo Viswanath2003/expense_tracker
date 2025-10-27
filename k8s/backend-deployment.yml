@@ -17,7 +17,7 @@ spec:
       containers:
         - name: backend
           image: expense-backend:latest
-          imagePullPolicy: Never  # because we build it locally with Minikube
+          imagePullPolicy: Never
           ports:
             - containerPort: 5000
           env:
@@ -29,3 +29,8 @@ spec:
               value: "root"
             - name: MYSQL_DB
               value: "expense_tracker"
+          readinessProbe:
+            tcpSocket:
+              port: 5000
+            initialDelaySeconds: 3
+            periodSeconds: 5
