@@ -176,7 +176,8 @@ const HomePage = ({ user, expenses, onAddExpense }) => {
     setExpenseAmount("");
   };
 
-  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const salary = Number(user.salary || 0);
   const remainingBalance = user.salary - totalExpenses;
 
   return (
