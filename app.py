@@ -53,7 +53,7 @@ def login():
         user_data = {
             'id': user['id'],
             'name': user['name'],
-            'salary': user['salary'],
+            'salary': float(user['salary']),
             'username': user['username']
         }
         

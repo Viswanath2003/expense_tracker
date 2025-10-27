@@ -176,20 +176,34 @@ const HomePage = ({ user, expenses, onAddExpense }) => {
     setExpenseAmount("");
   };
 
-  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const remainingBalance = user.salary - totalExpenses;
+  // ✅ Safely convert values to numbers
+  const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const salary = Number(user.salary || 0);
+  const remainingBalance = salary - totalExpenses;
 
   return (
     <div className="home-page">
       <div className="welcome-message">
         <h2>Welcome, {user.name}!</h2>
-        <p>Your monthly salary: ${user.salary.toFixed(2)}</p>
+        <p>Your monthly salary: ${salary.toFixed(2)}</p>
       </div>
+
       <div className="expense-form">
-        <input type="text" placeholder="Expense Name" value={expenseName} onChange={(e) => setExpenseName(e.target.value)} />
-        <input type="number" placeholder="Expense Amount" value={expenseAmount} onChange={(e) => setExpenseAmount(e.target.value)} />
+        <input
+          type="text"
+          placeholder="Expense Name"
+          value={expenseName}
+          onChange={(e) => setExpenseName(e.target.value)}
+        />
+        <input
+          type="number"
+          placeholder="Expense Amount"
+          value={expenseAmount}
+          onChange={(e) => setExpenseAmount(e.target.value)}
+        />
         <button onClick={handleSubmit}>Add Expense</button>
       </div>
+
       <table className="expense-table">
         <thead>
           <tr>
@@ -201,7 +215,7 @@ const HomePage = ({ user, expenses, onAddExpense }) => {
           {expenses.map((expense) => (
             <tr key={expense.id}>
               <td>{expense.name}</td>
-              <td>${expense.amount.toFixed(2)}</td>
+              <td>${Number(expense.amount || 0).toFixed(2)}</td>
             </tr>
           ))}
           <tr className="table-summary">
@@ -210,13 +224,16 @@ const HomePage = ({ user, expenses, onAddExpense }) => {
           </tr>
           <tr className="table-summary">
             <td><strong>Remaining Balance</strong></td>
-            <td className={remainingBalance >= 0 ? "balance-positive" : "balance-negative"}><strong>${remainingBalance.toFixed(2)}</strong></td>
+            <td className={remainingBalance >= 0 ? "balance-positive" : "balance-negative"}>
+              <strong>${remainingBalance.toFixed(2)}</strong>
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
   );
 };
+
 
 // About Page
 const AboutPage = () => (

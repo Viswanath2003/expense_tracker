@@ -1,12 +1,9 @@
 import os
 
 class Config:
-    # Read from environment variables, fall back to hardcoded if not set (for safety)
-    MYSQL_HOST = os.environ.get('MYSQL_HOST', 'localhost')
-    MYSQL_USER = os.environ.get('MYSQL_USER', 'expense_user')
-    MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD', 'Charan@2003')
-    MYSQL_DB = os.environ.get('MYSQL_DB', 'expense_tracker')
-    
-    # Other configurations
+    MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
+    MYSQL_USER = os.getenv("MYSQL_USER", "root")
+    MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "root")
+    MYSQL_DB = os.getenv("MYSQL_DB", "expense_tracker")
     MYSQL_CURSORCLASS = 'DictCursor'
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'supersecretkey')
+    MYSQL_CLIENT_FLAGS = [2048]
