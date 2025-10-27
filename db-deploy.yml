@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: PersistentVolumeClaim # 1. Request for persistent storage
+metadata:
+  name: mysql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi # Request 1 Gigabyte of storage
+
+---
+apiVersion: apps/v1
+kind: Deployment # 2. Database Deployment
+metadata:
+  name: mysql-deployment
+  labels:
+    app: expense-tracker
+    tier: database
+spec:
+  selector:
+    matchLabels:
+      app: expense-tracker
+      tier: database
+  template:
+    metadata:
+      labels:
+        app: expense-tracker
+        tier: database
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0 # Using official MySQL image
+        env: # Setting up environment variables for MySQL (Crucial!)
+        - name: MYSQL_ROOT_PASSWORD
+          value: "expense-root-pass"
+        - name: MYSQL_DATABASE
+          value: "expense_tracker"
+        - name: MYSQL_USER
+          value: "expense_user"
+        - name: MYSQL_PASSWORD
+          value: "Charan@2003" # Matches your config.py value
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql # Where MySQL stores data
+        - name: initdb-scripts
+          mountPath: /docker-entrypoint-initdb.d # Volume for initialization scripts (optional, for .sql)
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pvc
+      - name: initdb-scripts
+        hostPath: # Using hostPath for Minikube to access local files
+          path: /mnt/host_project
+          type: Directory
+
+---
+apiVersion: v1
+kind: Service # 3. Database Service (Internal DNS)
+metadata:
+  name: database-service # This name is CRITICAL (used by the Backend via MYSQL_HOST)
+  labels:
+    app: expense-tracker
+    tier: database
+spec:
+  selector:
+    app: expense-tracker
+    tier: database
+  ports:
+  - protocol: TCP
+    port: 3306
+    targetPort: 3306

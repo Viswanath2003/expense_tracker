@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment # 1. Backend Deployment
+metadata:
+  name: backend-deployment
+  labels:
+    app: expense-tracker
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: expense-tracker
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: expense-tracker
+        tier: backend
+    spec:
+      containers:
+      - name: backend
+        image: expense-tracker-backend:v1 # Your custom image
+        imagePullPolicy: Never # Tell Kubernetes not to pull from external registry
+        ports:
+        - containerPort: 5000
+        command: ["/bin/bash", "-c"]
+        args: ["sleep 10 && python app.py"]
+        env: # Environment variables for the Flask application (from your config.py)
+        - name: MYSQL_HOST
+          value: "database-service" # Matches the Service name of the DB
+        - name: MYSQL_USER
+          value: "expense_user"
+        - name: MYSQL_PASSWORD
+          value: "Charan@2003"
+        - name: MYSQL_DB
+          value: "expense_tracker"
+        - name: SECRET_KEY
+          value: "supersecretkey"
+
+---
+apiVersion: v1
+kind: Service # 2. Backend Service (Internal DNS)
+metadata:
+  name: backend-service # This name is CRITICAL (used by the Frontend Nginx proxy)
+  labels:
+    app: expense-tracker
+    tier: backend
+spec:
+  selector:
+    app: expense-tracker
+    tier: backend
+  ports:
+  - protocol: TCP
+    port: 5000 # Service port
+    targetPort: 5000 # Container port
