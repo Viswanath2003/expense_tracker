@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: frontend-deployment:latest   # 👈 Your preferred image name
-          imagePullPolicy: Never              # 👈 Prevents Kubernetes from pulling from Docker Hub
+          image: frontend-deployment:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 80
 ---
