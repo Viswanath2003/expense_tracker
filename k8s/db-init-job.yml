@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mysql-init-job
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      containers:
+        - name: init
+          image: mysql:8.0
+          env:
+            - name: MYSQL_PWD
+              value: "root"
+          volumeMounts:
+            - name: mysql-init-sql
+              mountPath: /sql
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for mysql to be ready..."
+              for i in $(seq 1 60); do
+                mysqladmin ping -h database-service --silent && break
+                sleep 1
+              done
+              if mysqladmin ping -h database-service --silent; then
+                echo "Importing /sql/db.sql into database-service..."
+                mysql -h database-service -u root expense_tracker < /sql/db.sql || true
+                echo "Import done."
+              else
+                echo "MySQL not ready after timeout." >&2
+                exit 1
+              fi
+      restartPolicy: OnFailure
+      volumes:
+        - name: mysql-init-sql
+          configMap:
+            name: mysql-init

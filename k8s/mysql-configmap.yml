@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+data:
+  my.cnf: |
+    [mysqld]
+    skip_ssl
+    require_secure_transport=OFF
+    default_authentication_plugin=mysql_native_password
+    bind-address=0.0.0.0
