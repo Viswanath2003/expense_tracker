@@ -16,7 +16,9 @@ spec:
     spec:
       containers:
         - name: backend
-          image: expense-backend:latest
+          image: my-backend-image:latest
+          #image: ExpenseTracker481.azurecr.io/backend:latest
+
           imagePullPolicy: Never
           ports:
             - containerPort: 5000

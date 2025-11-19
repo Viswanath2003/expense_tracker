@@ -17,6 +17,7 @@ spec:
       containers:
         - name: frontend
           image: frontend-deployment:latest
+          #image: ExpenseTracker481.azurecr.io/frontend:latest
           imagePullPolicy: Never
           ports:
             - containerPort: 80
@@ -33,3 +34,15 @@ spec:
       port: 80
       targetPort: 80
   type: NodePort
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: frontend-service
+# spec:
+#   type: LoadBalancer
+#   selector:
+#     app: frontend
+#   ports:
+#     - port: 80
+#       targetPort: 80
+
